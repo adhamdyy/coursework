@@ -20,7 +20,7 @@ def generate_prime(bits=8):
         if is_prime(prime_candidate):
             return prime_candidate
 
-# euclidean algorithm to compute the modular inverse
+# Euclidean algorithm to compute the modular inverse
 def mod_inverse(a, m):
     m0, x0, x1 = m, 0, 1
     if m == 1:
@@ -33,11 +33,11 @@ def mod_inverse(a, m):
         x1 += m0
     return x1
 
-# ElGamal Encryption Class
+# ElGamal encryption class
 class ElGamal:
-    def __init__(self, bits=8):  # bits reduced for faster testing
+    def __init__(self, bits=8):
         # prime p and primitive root g generation
-        self.p = generate_prime(bits)  # smaller prime number to test
+        self.p = generate_prime(bits)
         self.g = random.randint(2, self.p - 1)  # random generator g
         
         # choosing a secret key x
@@ -47,10 +47,7 @@ class ElGamal:
         self.y = pow(self.g, self.x, self.p)  # public key
         
     def encrypt(self, message):
-        """
-        Encrypts the message using ElGamal encryption.
-        The message must be an integer smaller than p.
-        """
+        """Encrypts the message using ElGamal encryption."""
         if message >= self.p:
             raise ValueError(f"Message must be smaller than the prime p ({self.p}).")
         
@@ -64,10 +61,7 @@ class ElGamal:
         return (c1, c2)
     
     def decrypt(self, ciphertext):
-        """
-        Decrypts the ciphertext using the private key x.
-        The ciphertext is a tuple (c1, c2).
-        """
+        """Decrypts the ciphertext using the private key x."""
         c1, c2 = ciphertext
         
         # computing the modular inverse of c1^x % p
@@ -78,20 +72,46 @@ class ElGamal:
         message = (c2 * s_inv) % self.p
         return message
 
-# example 
+# Main program logic
 if __name__ == "__main__":
-    # start ElGamal system
-    elgamal = ElGamal(bits=8)  # using a smaller prime number for quicker testing
+    # Get user input for the bit size of the prime number
+    try:
+        bits = int(input("Enter the bit size for the prime number (e.g., 8): "))
+    except ValueError:
+        print("Invalid input for bits size!")
+        exit()
+
+    # Create the ElGamal system with the given bits
+    elgamal = ElGamal(bits=bits)
+
+    # Display generated prime and public key
+    print(f"Generated prime p: {elgamal.p}")
+    print(f"Public key (g, y): ({elgamal.g}, {elgamal.y})")
     
-    # encrypted messsag (must be smaller than the prime p)
-    message = 25 
+    # Ask the user whether they want to encrypt or decrypt
+    choice = input("Do you want to (E)ncrypt or (D)ecrypt? ").strip().lower()
     
-    print(f"Original Message: {message}")
+    if choice == 'e':
+        # Encrypt mode
+        try:
+            message = int(input(f"Enter the message to encrypt (must be an integer smaller than the prime p): "))
+            if message < 0:
+                raise ValueError("Message must be a non-negative integer.")
+            ciphertext = elgamal.encrypt(message)
+            print(f"Encrypted message (ciphertext): {ciphertext}")
+        except ValueError as e:
+            print(f"Invalid input: {e}")
     
-    # messafe encryption
-    ciphertext = elgamal.encrypt(message)
-    print(f"Ciphertext: {ciphertext}")
+    elif choice == 'd':
+        # Decrypt mode
+        try:
+            c1 = int(input("Enter the first ciphertext component (c1): "))
+            c2 = int(input("Enter the second ciphertext component (c2): "))
+            ciphertext = (c1, c2)
+            decrypted_message = elgamal.decrypt(ciphertext)
+            print(f"Decrypted message: {decrypted_message}")
+        except ValueError as e:
+            print(f"Invalid input: {e}")
     
-    # message decryption
-    decrypted_message = elgamal.decrypt(ciphertext)
-    print(f"Decrypted Message: {decrypted_message}")
+    else:
+        print("Invalid choice. Please select 'E' for encryption or 'D' for decryption.")
